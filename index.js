@@ -62,4 +62,4 @@ bot.command('fetch', async (ctx)=>{
 })
 
 //bot.launch()
-module.export=bot
+module.exports=bot
