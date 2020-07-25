@@ -47,14 +47,17 @@ const dailyList = async ()=>{
     return nameList.join('\n');
 };
 
-var helptip = ()=>{
+var helpTip = ()=>{
     return `/fetch`+ " to fetch the daily sales for POE MTX"
 }
 
+var startTip = ()=>{
+    return `/fetch`+ " to fetch the daily sales for POE MTX\n"+ `/help`+" for help tooltip"
+}
 
-bot.start((ctx) => ctx.reply(helptip()))
-bot.help((ctx) => ctx.reply('Send me a sticker'))
-bot.on('sticker', (ctx) => ctx.reply('👍'))
+bot.start((ctx) => ctx.reply(startTip()))
+bot.help((ctx) => ctx.reply(helpTip()))
+bot.on('sticker', (ctx) => ctx.reply('very nais sticcer'))
 bot.hears('query', (ctx) => ctx.reply('something'))
 bot.command('fetch', async (ctx)=>{
     ctx.reply('fetching latest info from website...')
