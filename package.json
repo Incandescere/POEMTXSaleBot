@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "micro-bot": "^2.5.3",
+    "prettier": "^2.0.5",
     "puppeteer": "^5.2.1",
     "telegraf": "^3.38.0"
   }
