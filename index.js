@@ -5,10 +5,12 @@ const {Composer}  = require('micro-bot')
 //const bot = new Telegraf('1123755502:AAGKCqd36deAKDlj2dz-Am7201q4ZdvdGEs')
 const bot = new Composer
 
+
+
 const dailyList = async ()=>{
     
     // open the headless browser
-    var browser = await puppeteer.launch({ args: ['--no-sandbox'], headless:true });
+    var browser = await puppeteer.launch({ args: ['--no-sandbox'], headless:false });
 
     // open a new page
     var page = await browser.newPage();
@@ -16,51 +18,6 @@ const dailyList = async ()=>{
     const url = 'https://www.pathofexile.com/shop/category/daily-deals#';    
 
     //wait until there are no 2 connections in 500ms
-    await page.goto(url, {waitUntil: 'networkidle2'});
-
-    var nameList = await page.evaluate(()=>{
-        var itemList = []
-        document.querySelectorAll('a.name').forEach(x=>itemList.push(x.innerText.trim()))
-        var priceList = []
-        document.querySelectorAll('div.price').forEach(x=>priceList.push(x.innerText.trim()))
-        // var images = []
-        // document.querySelectorAll('div>a>img.itemImage.replace').forEach(x=>images.push(x.src))
-
-        var ret = priceList
-
-        for(var i=0; i<itemList.length;i++){
-            ret[i]=itemList[i]+' '+priceList[i]/*+' \n'+images[i]*/;
-        }
-
-        ret.sort();
-
-        for(var i=0;i<itemList.length;i++){
-            ret[i] = (i+1)+": " +ret[i]
-        }
-
-        return ret;
-    })
-
-    //take ss
-    //await page.screenshot({ path: "example.png" });
-
-    //console.log(nameList);
-
-    await browser.close();
-
-    return nameList.join('\n')
-};
-
-const imageLinks = async ()=>{
-     // open the headless browser
-    var browser = await puppeteer.launch({ args: ['--no-sandbox'], headless:true });
-
-     // open a new page
-    var page = await browser.newPage();
- 
-    const url = 'https://www.pathofexile.com/shop/category/daily-deals#';    
- 
-     //wait until there are no 2 connections in 500ms
     await page.goto(url, {waitUntil: 'networkidle2'});
 
     var scrollTimer = page.evaluate(() => {
@@ -75,38 +32,102 @@ const imageLinks = async ()=>{
                     clearInterval(timer)
                     resolve()
                 }
-            }, 200)
+            }, 100)
         })  
     })
-    
-    // var crawler = scrollTimer.then(async () => {
-    //     var urls = await page.evaluate(() => {
-    //         var links = [...document.querySelectorAll('div>a>img.itemImage.replace')]
-    //         return links.map(img => {
-    //             return img.src
-    //         })
-    //     })
-    
-    //     await page.close()
-    //     return Promise.resolve(urls)
-    // }).catch((e) => {
-    //     console.log(e)
-    // })
 
-    var trawl = scrollTimer.then(async ()=>{
-        var images = await page.evaluate(()=>{
-            var ret = []
-            document.querySelectorAll('div>a>img.itemImage.replace').forEach(x=>ret.push(x.src));
-            return ret;
+    var collatedList = scrollTimer.then(async ()=>{
+      
+        var itemList = await page.evaluate(()=>{
+            var items = []
+            document.querySelectorAll('a.name').forEach(x=>items.push(x.innerText.trim()))
+            return items;
         })
+        var priceList = await page.evaluate(()=>{
+            var prices = []
+            document.querySelectorAll('div.price').forEach(x=>prices.push(x.innerText.trim()))
+            return prices;
+        })
+        // var imageurlList = await page.evaluate(()=>{
+        //     var imageurls = []
+        //     document.querySelectorAll('div>a>img.itemImage.replace').forEach(x=>imageurls.push(x.src));
+        //     return imageurls;
+        // })
+
+        var collated =[]
+        for(var i=0;i<itemList.length;i++){
+            collated[i]=(itemList[i]+' '+priceList[i])
+        }
+
         await page.close()
-        return images.join('\n\n')
+        return collated.sort()
     })
-    return trawl;
+
+    //take ss
+    //await page.screenshot({ path: "example.png" });
+
+    //console.log(nameList);
+
+    return (await collatedList).join('\n')
+};
+
+
+
+const newsFeed = async ()=>{
+    // open the headless browser
+    var browser = await puppeteer.launch({ args: ['--no-sandbox'], headless:false });
+
+    // open a new page
+    var page = await browser.newPage();
+
+    const url = 'https://www.pathofexile.com/forum/view-forum/news';    
+
+    //wait until there are no 2 connections in 500ms
+    await page.goto(url, {waitUntil: 'networkidle2'});
+
+    var scrollTimer = page.evaluate(() => {
+        return new Promise((resolve, reject) => {
+            var totalHeight = 0
+            var distance = 600
+            var timer = setInterval(() => {
+                window.scrollBy(0, distance)
+                totalHeight += distance
+    
+                if(totalHeight >= document.body.scrollHeight){
+                    clearInterval(timer)
+                    resolve()
+                }
+            }, 100)
+        })  
+    })
+
+    var forumPosts = scrollTimer.then(async ()=>{
+
+        var titleList = await page.evaluate(()=>{
+            var threads = document.querySelectorAll('div.thread_title>div.title>a')
+            var dates = document.querySelectorAll('span.post_date')
+            var titlenurl = []
+            for(var i=0;i<threads.length;i++){
+                titlenurl[i]=dates[i].innerText.slice(2,)+'\n'+threads[i].innerText+'\n'+threads[i].href+'\n'
+            }
+            return titlenurl
+        })
+
+        
+        await page.close()
+        return await titleList
+    })
+
+    return (await forumPosts).join('\n')
 }
 
+
 var helpTip = ()=>{
-    return `/fetch`+ " to fetch the daily sales for POE MTX"
+    var help = `
+    /fetch to fetch the daily sales for POE MTX \n/news for the latest forum news posts
+    `
+
+    return help
 }
 
 var startTip = ()=>{
@@ -133,10 +154,10 @@ bot.command('fetch', async (ctx)=>{
     ctx.reply(await dailyList())
 })
 
-bot.command('links', async (ctx)=>{
-    console.log('fetch image links')
-    ctx.reply('fetching links from website...')
-    ctx.reply(await imageLinks())
+bot.command('news', async (ctx)=>{
+    console.log('news command recd')
+    ctx.reply('fetching latest news posts...')
+    ctx.reply(await newsFeed())
 })
 
 //bot.launch()
