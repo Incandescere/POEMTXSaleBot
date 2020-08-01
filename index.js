@@ -1,4 +1,5 @@
 const puppeteer = require("puppeteer");
+
 //const Telegraf=require('telegraf');
 const {Composer}  = require('micro-bot')
 
@@ -10,7 +11,7 @@ const bot = new Composer
 const dailyList = async ()=>{
     
     // open the headless browser
-    var browser = await puppeteer.launch({ args: ['--no-sandbox'], headless:true });
+    var browser = await puppeteer.launch({ args: ['--no-sandbox'],headless:true });
 
     // open a new page
     var page = await browser.newPage();
@@ -121,6 +122,9 @@ const newsFeed = async ()=>{
     return (await forumPosts).join('\n')
 }
 
+var about = ()=>{
+    return `Made by @EtherealDrift\nGithub repo: https://github.com/Incandescere/POEMTXSaleBot`
+}
 
 var helpTip = ()=>{
     var help = `
@@ -131,7 +135,7 @@ var helpTip = ()=>{
 }
 
 var startTip = ()=>{
-    return `/fetch`+ " to fetch the daily sales for POE MTX\n"+ `/help`+" for help tooltip"
+    return `/help for help tooltip`
 }
 
 bot.start((ctx) => {
@@ -142,6 +146,10 @@ bot.start((ctx) => {
 bot.help((ctx) => {
     console.log('help command recd')
     ctx.reply(helpTip())
+})
+
+bot.command('about', async (ctx)=>{
+    ctx.reply(about())
 })
 
 bot.on('sticker', (ctx) => ctx.reply('very nais sticcer'))
