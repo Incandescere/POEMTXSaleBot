@@ -9,7 +9,7 @@ const bot = new Composer
 const dailyList = async ()=>{
     
     // open the headless browser
-    var browser = await puppeteer.launch({ args: ['--no-sandbox'],headless:false });
+    var browser = await puppeteer.launch({ args: ['--no-sandbox'],headless:true });
 
     // open a new page
     var page = await browser.newPage();
@@ -74,7 +74,7 @@ const dailyList = async ()=>{
 
 const newsFeed = async ()=>{
     // open the headless browser
-    var browser = await puppeteer.launch({ args: ['--no-sandbox'], headless:false });
+    var browser = await puppeteer.launch({ args: ['--no-sandbox'], headless:true });
 
     // open a new page
     var page = await browser.newPage();
@@ -120,7 +120,7 @@ const newsFeed = async ()=>{
 
 const labLayout = async (labrank)=>{
     // open the headless browser
-    var browser = await puppeteer.launch({ args: ['--no-sandbox'],headless:false });
+    var browser = await puppeteer.launch({ args: ['--no-sandbox'],headless:true });
 
     // open a new page
     var page = await browser.newPage();
