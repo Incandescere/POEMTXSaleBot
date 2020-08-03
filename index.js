@@ -6,12 +6,10 @@ const {Composer}  = require('micro-bot')
 //const bot = new Telegraf('1123755502:AAGKCqd36deAKDlj2dz-Am7201q4ZdvdGEs')
 const bot = new Composer
 
-
-
 const dailyList = async ()=>{
     
     // open the headless browser
-    var browser = await puppeteer.launch({ args: ['--no-sandbox'],headless:true });
+    var browser = await puppeteer.launch({ args: ['--no-sandbox'],headless:false });
 
     // open a new page
     var page = await browser.newPage();
@@ -76,7 +74,7 @@ const dailyList = async ()=>{
 
 const newsFeed = async ()=>{
     // open the headless browser
-    var browser = await puppeteer.launch({ args: ['--no-sandbox'], headless:true });
+    var browser = await puppeteer.launch({ args: ['--no-sandbox'], headless:false });
 
     // open a new page
     var page = await browser.newPage();
@@ -112,9 +110,7 @@ const newsFeed = async ()=>{
                 titlenurl[i]=dates[i].innerText.slice(2,)+'\n'+threads[i].innerText+'\n'+threads[i].href+'\n'
             }
             return titlenurl
-        })
-
-        
+        })        
         await page.close()
         return await titleList
     })
@@ -122,16 +118,55 @@ const newsFeed = async ()=>{
     return (await forumPosts).join('\n')
 }
 
+const labLayout = async (labrank)=>{
+    // open the headless browser
+    var browser = await puppeteer.launch({ args: ['--no-sandbox'],headless:false });
+
+    // open a new page
+    var page = await browser.newPage();
+
+    const url = 'https://www.poelab.com/';    
+
+    //wait until there are no 2 connections in 500ms
+    await page.goto(url, {waitUntil: 'networkidle2'});
+
+    var labList = async ()=>{
+        var lablister = await page.evaluate(()=>{
+            var labs=[]
+            document.querySelectorAll('div.su-column.su-column-size-1-4>div.su-column-inner.su-clearfix>h2>a').forEach(x=>labs.push(x.href))
+            return labs;
+        })
+        return await lablister
+    }
+
+    //go to lab page
+    var newurl = (await labList())[labrank]
+    await page.goto(newurl, {waitUntil: 'networkidle2'});
+    
+    var today = async ()=>{
+        var imagelink = await page.evaluate(()=>{
+            var pic = document.querySelector('span.su-lightbox>img').src.trim()
+            return pic
+        })
+        await page.close
+        return await imagelink
+    }
+    return await today();
+};
+
 var about = ()=>{
     return `Made by @EtherealDrift\nGithub repo: https://github.com/Incandescere/POEMTXSaleBot`
 }
 
 var helpTip = ()=>{
     var help = `
-    /fetch to fetch the daily sales for POE MTX \n/news for the latest forum news posts
+    /fetch to fetch the daily sales for POE MTX \n/news for the latest forum news posts\n/labs for the daily layout of the Labyrinth of Ascension
     `
-
     return help
+}
+
+var labTip = ()=>{
+    return `/uberlab for the Eternal Labyrinth\n/merclab for the Merciless Labyrinth\n/cruellab for the Cruel Labyrinth\n/normallab for the Normal Labyrinth`
 }
 
 var startTip = ()=>{
@@ -152,6 +187,10 @@ bot.command('about', async (ctx)=>{
     ctx.reply(about())
 })
 
+bot.command('labs', async (ctx)=>{
+    ctx.reply(labTip())
+})
+
 bot.on('sticker', (ctx) => ctx.reply('very nais sticcer'))
 
 bot.hears('query', (ctx) => ctx.reply('something'))
@@ -166,6 +205,30 @@ bot.command('news', async (ctx)=>{
     console.log('news command recd')
     ctx.reply('fetching latest news posts...')
     ctx.reply(await newsFeed())
+})
+
+bot.command('uberlab', async (ctx)=>{
+    console.log('uberlab command recd')
+    ctx.reply('fetching latest data from website...')
+    ctx.reply(await labLayout(0))
+})
+
+bot.command('merclab', async (ctx)=>{
+    console.log('merclab command recd')
+    ctx.reply('fetching latest data from website...')
+    ctx.reply(await labLayout(1))
+})
+
+bot.command('cruellab', async (ctx)=>{
+    console.log('cruellab command recd')
+    ctx.reply('fetching latest data from website...')
+    ctx.reply(await labLayout(2))
+})
+
+bot.command('normallab', async (ctx)=>{
+    console.log('normallab command recd')
+    ctx.reply('fetching latest data from website...')
+    ctx.reply(await labLayout(3))
 })
 
 //bot.launch()
